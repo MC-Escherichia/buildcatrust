@@ -4,9 +4,7 @@
 
 import dataclasses
 
-from buildcatrust import der_x509
-
-
+from buildcatrust import der_x509, enums, types, certstore_parser
 def test_object_id():
     c = der_x509.ObjectID.from_str("Hello", "1.2.3.4.2554")
     assert str(c) == "1.2.3.4.2554"
@@ -168,6 +166,28 @@ f8eada36c28765962e72252f7fdfc313c9
     assert got_cert_aux == cert_aux
     assert trailing == b""
 
+def test_parse_openssl_cert2():
+    certs = []
+    with open('buildcatrust/tests/testdata/bad-ca-0.pem', 'r') as fd:
+        while True:
+            data = der_x509.PEMBlock.decode_from_file(fd)
+            if not data:
+                if fd.read(1) == "":
+                    break
+                else: 
+                    raise IOError("something went wrong")
+            _, pem_block = data
+            if pem_block.name == "CERTIFICATE":
+                certs.append(certstore_parser._cert_bytes_to_cert_and_trust(
+                    pem_block.content,
+                    {
+                        attr: enums.TrustType.TRUSTED_DELEGATOR
+                        if attr in types.Trust.CORE_TRUST_ATTRS
+                        else enums.TrustType.UNKNOWN
+                        for attr in types.Trust.TRUST_ATTRS
+                    },
+                ))
+        assert len(certs) == 1
 
 def test_distinguished_name():
     test_dn = bytes.fromhex(

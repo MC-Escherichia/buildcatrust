@@ -417,7 +417,8 @@ class DistinguishedName:
                 seq_b, set_b = seq_b[:seq_len], seq_b[seq_len:]
 
                 seq_oid, seq_b = ObjectID.from_der(seq_b)
-                assert seq_b[0] in (0x13, 0x14, 0x0C, 0x16)
+                print(seq_b[0])
+                assert seq_b[0] in (0x13, 0x14, 0x0C, 0x16, 0x1E)
                 part_len, _, seq_b = _decode_len(seq_b[1:])
                 part_b, seq_b = seq_b[:seq_len], seq_b[seq_len:]
                 assert seq_b == b"", "DN seq contained >2 parts"
